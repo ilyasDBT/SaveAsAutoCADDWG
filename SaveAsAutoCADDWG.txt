@@ -1,0 +1,86 @@
+Sub Dialog_SaveAsAutoCADDWG()
+    'note: inventor will crash after selecting file if no document is open
+    
+    'Browse for file to be saved as AutoCAD dwg
+    Dim oFileDlgDrawingFile As FileDialog
+    Call ThisApplication.CreateFileDialog(oFileDlgDrawingFile)
+    oFileDlgDrawingFile.Filter = "Inventor Drawings (*.dwg)|*.dwg"
+    oFileDlgDrawingFile.FilterIndex = 1
+    oFileDlgDrawingFile.DialogTitle = "Drawing File"
+    oFileDlgDrawingFile.MultiSelectEnabled = True
+    oFileDlgDrawingFile.ShowOpen
+    If oFileDlgDrawingFile.fileName = "" Then End
+            
+    'Browse for configuration file (can be created from the manual export to autocad dwg method)
+    Dim oFileDlgConfigFile As FileDialog
+    Call ThisApplication.CreateFileDialog(oFileDlgConfigFile)
+    oFileDlgConfigFile.Filter = "Config File(*.ini)|*.ini"
+    oFileDlgConfigFile.FilterIndex = 1
+    oFileDlgConfigFile.DialogTitle = "Config File"
+    oFileDlgConfigFile.MultiSelectEnabled = True
+    oFileDlgConfigFile.ShowOpen
+    If oFileDlgConfigFile.fileName = "" Then End
+    
+    'Browse for save director
+    Dim oFileDlgSaveDirectory As FileDialog
+    Call ThisApplication.CreateFileDialog(oFileDlgSaveDirectory)
+    oFileDlgSaveDirectory.DialogTitle = "Save Directory (save as any name in the target folder)"
+    oFileDlgSaveDirectory.MultiSelectEnabled = True
+    oFileDlgSaveDirectory.fileName = "SaveDirectory"
+    oFileDlgSaveDirectory.ShowSave
+    If oFileDlgSaveDirectory.fileName = "" Then End
+    
+    Dim saveDirectory As String
+    saveDirectory = Left(oFileDlgSaveDirectory.fileName, InStrRev(oFileDlgSaveDirectory.fileName, "\"))
+    
+    If Not oFileDlgDrawingFile.fileName = "" Then
+        Dim fileNames As Variant
+        fileNames = Split(oFileDlgDrawingFile.fileName, "|")
+        Dim fileName As Variant
+        For Each fileName In fileNames
+            Call SaveAsAutoCADDWG(CStr(fileName), saveDirectory, oFileDlgConfigFile.fileName)
+        Next fileName
+    End If
+
+End Sub
+
+Sub SaveAsAutoCADDWG(dwgPath As String, saveDirectory As String, iniPath As String)
+    
+    Dim oDocument As Document
+    Set oDocument = ThisApplication.Documents.Open(dwgPath, True)
+      
+    ' Get the DWG translator Add-In.
+    Dim DWGAddIn As TranslatorAddIn
+    Set DWGAddIn = ThisApplication.ApplicationAddIns.ItemById("{C24E3AC2-122E-11D5-8E91-0010B541CD80}")
+          
+    ' Create a DWG translater argument objects
+    Dim oContext As TranslationContext
+    Set oContext = ThisApplication.TransientObjects.CreateTranslationContext
+    oContext.Type = kFileBrowseIOMechanism
+    
+    Dim oOptions As NameValueMap
+    Set oOptions = ThisApplication.TransientObjects.CreateNameValueMap
+    
+    If DWGAddIn.HasSaveCopyAsOptions(oDocument, oContext, oOptions) Then ' Check whether the translator has 'SaveCopyAs' options
+        Dim strIniFile As String
+        oOptions.Value("Export_Acad_IniFile") = iniPath ' Create the name-value that specifies the ini file to use.
+    End If
+    
+    Dim oDataMedium As DataMedium
+    Set oDataMedium = ThisApplication.TransientObjects.CreateDataMedium
+    
+    Dim SaveName As String
+    SaveName = oDocument.DisplayName
+    SaveName = Left(SaveName, InStrRev(SaveName, ".") - 1)
+    
+    Dim revision As String
+    revision = oDocument.PropertySets.Item("Inventor Summary Information").Item("Revision Number").Value
+    
+    oDataMedium.fileName = saveDirectory & SaveName & "_rev_" & revision & ".dwg"
+    
+    'Execute save as AutoCAD DWG
+    Call DWGAddIn.SaveCopyAs(oDocument, oContext, oOptions, oDataMedium)
+
+    oDocument.Close (True)
+
+End Sub
