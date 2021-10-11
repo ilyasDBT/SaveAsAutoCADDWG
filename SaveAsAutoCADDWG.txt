@@ -11,21 +11,22 @@ Sub Dialog_SaveAsAutoCADDWG()
     oFileDlgDrawingFile.ShowOpen
     If oFileDlgDrawingFile.fileName = "" Then End
             
-    'Browse for configuration file (can be created from the manual export to autocad dwg method)
-    Dim oFileDlgConfigFile As FileDialog
-    Call ThisApplication.CreateFileDialog(oFileDlgConfigFile)
-    oFileDlgConfigFile.Filter = "Config File(*.ini)|*.ini"
-    oFileDlgConfigFile.FilterIndex = 1
-    oFileDlgConfigFile.DialogTitle = "Config File"
-    oFileDlgConfigFile.MultiSelectEnabled = True
-    oFileDlgConfigFile.ShowOpen
-    If oFileDlgConfigFile.fileName = "" Then End
+    ''Browse for configuration file (can be created from the manual export to autocad dwg method)
+    'Dim oFileDlgConfigFile As FileDialog
+    'Call ThisApplication.CreateFileDialog(oFileDlgConfigFile)
+    'oFileDlgConfigFile.Filter = "Config File(*.ini)|*.ini"
+    'oFileDlgConfigFile.FilterIndex = 1
+    'oFileDlgConfigFile.DialogTitle = "Config File"
+    'oFileDlgConfigFile.ShowOpen
+    'If oFileDlgConfigFile.fileName = "" Then End
+    Dim iniPath As String
+    'iniPath = oFileDlgConfigFile.fileName
+    iniPath = "C:\CHM Vault\Libraries\AutoCAD DWG Export Config.ini"
     
     'Browse for save director
     Dim oFileDlgSaveDirectory As FileDialog
     Call ThisApplication.CreateFileDialog(oFileDlgSaveDirectory)
     oFileDlgSaveDirectory.DialogTitle = "Save Directory (save as any name in the target folder)"
-    oFileDlgSaveDirectory.MultiSelectEnabled = True
     oFileDlgSaveDirectory.fileName = "SaveDirectory"
     oFileDlgSaveDirectory.ShowSave
     If oFileDlgSaveDirectory.fileName = "" Then End
@@ -38,7 +39,7 @@ Sub Dialog_SaveAsAutoCADDWG()
         fileNames = Split(oFileDlgDrawingFile.fileName, "|")
         Dim fileName As Variant
         For Each fileName In fileNames
-            Call SaveAsAutoCADDWG(CStr(fileName), saveDirectory, oFileDlgConfigFile.fileName)
+            Call SaveAsAutoCADDWG(CStr(fileName), saveDirectory, iniPath)
         Next fileName
     End If
 
@@ -47,7 +48,7 @@ End Sub
 Sub SaveAsAutoCADDWG(dwgPath As String, saveDirectory As String, iniPath As String)
     
     Dim oDocument As Document
-    Set oDocument = ThisApplication.Documents.Open(dwgPath, True)
+    Set oDocument = ThisApplication.Documents.Open(dwgPath, False)
       
     ' Get the DWG translator Add-In.
     Dim DWGAddIn As TranslatorAddIn
