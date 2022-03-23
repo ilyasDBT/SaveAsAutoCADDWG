@@ -1,0 +1,86 @@
+Sub Dialog_ExportDWG()
+    'note: inventor sometimes crash after selecting file if no document is open
+    
+    'Browse for file to be saved as AutoCAD dwg
+    Dim oFileDlgDrawingFile As FileDialog
+    Call ThisApplication.CreateFileDialog(oFileDlgDrawingFile)
+    oFileDlgDrawingFile.Filter = "Inventor Drawings (*.dwg)|*.dwg"
+    oFileDlgDrawingFile.FilterIndex = 1
+    oFileDlgDrawingFile.DialogTitle = "Drawing File"
+    oFileDlgDrawingFile.MultiSelectEnabled = True
+    oFileDlgDrawingFile.ShowOpen
+    If oFileDlgDrawingFile.fileName = "" Then End
+            
+    'Browse for save director
+    Dim oFileDlgSaveDirectory As FileDialog
+    Call ThisApplication.CreateFileDialog(oFileDlgSaveDirectory)
+    oFileDlgSaveDirectory.DialogTitle = "Save Directory (save as any name in the target folder)"
+    oFileDlgSaveDirectory.fileName = "SaveDirectory"
+    oFileDlgSaveDirectory.ShowSave
+    If oFileDlgSaveDirectory.fileName = "" Then End
+    
+    Dim saveDirectory As String
+    saveDirectory = Left(oFileDlgSaveDirectory.fileName, InStrRev(oFileDlgSaveDirectory.fileName, "\"))
+    
+    If Not oFileDlgDrawingFile.fileName = "" Then
+        Dim fileNames As Variant
+        fileNames = Split(oFileDlgDrawingFile.fileName, "|")
+        Dim fileName As Variant
+        For Each fileName In fileNames
+            Call ExportDWG(CStr(fileName), saveDirectory)
+        Next fileName
+    End If
+
+    MsgBox ("Export complete")
+
+End Sub
+
+Sub ExportDWG(dwgPath As String, saveDirectory As String)
+    
+    ThisApplication.SilentOperation = True
+    Dim oDocument As Document
+    Set oDocument = ThisApplication.Documents.Open(dwgPath, False)
+      
+    ' Get the PDF translator Add-In.
+    Dim PDFAddIn As TranslatorAddIn
+    Set PDFAddIn = ThisApplication.ApplicationAddIns.ItemById("{0AC6FD96-2F4D-42CE-8BE0-8AEA580399E4}")
+          
+    ' Create a PDF translater argument objects
+    Dim oContext As TranslationContext
+    Set oContext = ThisApplication.TransientObjects.CreateTranslationContext
+    oContext.Type = kFileBrowseIOMechanism
+    
+    Dim oOptions As NameValueMap
+    Set oOptions = ThisApplication.TransientObjects.CreateNameValueMap
+    
+    If PDFAddIn.HasSaveCopyAsOptions(oDocument, oContext, oOptions) Then
+
+        ' Options for drawings...
+
+        oOptions.Value("All_Color_AS_Black") = 0
+        'oOptions.Value("Remove_Line_Weights") = 0
+        'oOptions.Value("Vector_Resolution") = 400
+        oOptions.Value("Sheet_Range") = PrintRangeEnum.kPrintAllSheets
+        'oOptions.Value("Custom_Begin_Sheet") = 2
+        'oOptions.Value("Custom_End_Sheet") = 4
+
+    End If
+    
+    Dim oDataMedium As DataMedium
+    Set oDataMedium = ThisApplication.TransientObjects.CreateDataMedium
+    
+    Dim SaveName As String
+    SaveName = oDocument.DisplayName
+    SaveName = Left(SaveName, InStrRev(SaveName, ".") - 1)
+    
+    Dim revision As String
+    revision = oDocument.PropertySets.Item("Inventor Summary Information").Item("Revision Number").Value
+    
+    oDataMedium.fileName = saveDirectory & SaveName & "_rev_" & revision & ".pdf"
+    
+    'Execute save as AutoCAD DWG
+    Call PDFAddIn.SaveCopyAs(oDocument, oContext, oOptions, oDataMedium)
+
+    oDocument.Close (True)
+    ThisApplication.SilentOperation = False
+End Sub
