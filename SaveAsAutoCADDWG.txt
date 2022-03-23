@@ -81,10 +81,48 @@ Sub SaveAsAutoCADDWG(dwgPath As String, saveDirectory As String, iniPath As Stri
     revision = oDocument.PropertySets.Item("Inventor Summary Information").Item("Revision Number").Value
     
     oDataMedium.fileName = saveDirectory & SaveName & "_rev_" & revision & ".dwg"
+    DeleteSheetFiles (oDataMedium.fileName)
+    
     
     'Execute save as AutoCAD DWG
     Call DWGAddIn.SaveCopyAs(oDocument, oContext, oOptions, oDataMedium)
 
     oDocument.Close (True)
     ThisApplication.SilentOperation = False
+End Sub
+
+Function FileExists(fileName As String)
+    Dim strFileExists As String
+    strFileExists = Dir(fileName)
+ 
+    If strFileExists = "" Then
+        FileExists = False
+    Else
+        FileExists = True
+    End If
+End Function
+
+
+Sub DeleteSheetFiles(fileName As String)
+    If FileExists(fileName) Then Kill (oData.fileName)
+    
+    Dim sheetPrefix As String
+    sheetPrefix = Left(fileName, InStrRev(fileName, ".") - 1) + "_Sheet_"
+    
+    Dim sheetName As String
+    
+    Dim sheetExist As Boolean
+    sheetExist = True
+    
+    Dim i As Integer
+    i = 1
+    Do While sheetExist
+        MsgBox sheetName
+        If FileExists(sheetName) Then
+            Kill (sheetName)
+            i = i + 1
+        Else
+            sheetExist = False
+        End If
+    Loop
 End Sub
