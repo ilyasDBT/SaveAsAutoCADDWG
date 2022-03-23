@@ -104,7 +104,7 @@ End Function
 
 
 Sub DeleteSheetFiles(fileName As String)
-    If FileExists(fileName) Then Kill (oData.fileName)
+    If FileExists(fileName) Then Kill (fileName)
     
     Dim sheetPrefix As String
     sheetPrefix = Left(fileName, InStrRev(fileName, ".") - 1) + "_Sheet_"
