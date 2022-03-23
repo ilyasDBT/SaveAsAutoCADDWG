@@ -47,6 +47,7 @@ End Sub
 
 Sub SaveAsAutoCADDWG(dwgPath As String, saveDirectory As String, iniPath As String)
     
+    ThisApplication.SilentOperation = True
     Dim oDocument As Document
     Set oDocument = ThisApplication.Documents.Open(dwgPath, False)
       
