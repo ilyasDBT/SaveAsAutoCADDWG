@@ -117,7 +117,7 @@ Sub DeleteSheetFiles(fileName As String)
     Dim i As Integer
     i = 1
     Do While sheetExist
-        'MsgBox sheetName
+        sheetName = sheetPrefix & i & ".dwg"
         If FileExists(sheetName) Then
             Kill (sheetName)
             i = i + 1
