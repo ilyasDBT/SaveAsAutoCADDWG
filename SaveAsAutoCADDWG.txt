@@ -43,6 +43,8 @@ Sub Dialog_SaveAsAutoCADDWG()
         Next fileName
     End If
 
+    MsgBox ("Export complete")
+
 End Sub
 
 Sub SaveAsAutoCADDWG(dwgPath As String, saveDirectory As String, iniPath As String)
@@ -84,5 +86,5 @@ Sub SaveAsAutoCADDWG(dwgPath As String, saveDirectory As String, iniPath As Stri
     Call DWGAddIn.SaveCopyAs(oDocument, oContext, oOptions, oDataMedium)
 
     oDocument.Close (True)
-
+    ThisApplication.SilentOperation = False
 End Sub
